@@ -19,6 +19,30 @@ namespace Exam2013
             double d = fv[0].Invoke(tmp);
             Console.WriteLine(d);
 
+            Console.WriteLine("Start Step 1");
+            //predator	prey	simulation
+            //(1)	single	value
+            PredPrey p = new PredPrey();
+            p.Nsettle = 1000;
+            Vector v0 = new Vector(new double[] { 0.83, 0.55 });
+            p.Delta = 1.38;
+            p.run1sim(v0, "C:\\Users\\114113597\\Downloads\\outfile.csv");
+            Console.ReadKey();
+
+            Console.WriteLine("Start Step 2");
+            //(2)	produce	bifurcation	plot	data	use	default	values
+            p.runsimDrange(v0, 1.26, 1.4, 1000, "C:\\Users\\114113597\\Downloads\\outfile1.csv");
+            Console.ReadKey();
+
+            Console.WriteLine("Start Step 3");
+            //(3)	produce	second	bifurcation	plot
+            p.R = 3;
+            p.B = 3.5;
+            p.D = 2;
+            v0 = new Vector(new double[] { 0.57, 0.37 });
+            p.runsimDrange(v0, 0.5, 0.95, 1000, "C:\\Users\\114113597\\Downloads\\outfile2.csv");
+            Console.ReadKey();
+            Console.WriteLine("Finished!!");
         }
     }
 
@@ -49,7 +73,7 @@ namespace Exam2013
 
         public void setSize(int size)
         {
-            if ( size < 1)
+            if (size < 1)
                 return;
             double[] tmp = new double[size];
             foreach (int i in values)
@@ -57,9 +81,9 @@ namespace Exam2013
             values = tmp;
         }
 
-        public static Vector operator +(Vector lhs,Vector rhs)
+        public static Vector operator +(Vector lhs, Vector rhs)
         {
-            if(lhs.values.Length != rhs.values.Length)
+            if (lhs.values.Length != rhs.values.Length)
             {
                 Console.WriteLine("Invalid Vector Addition Attemted");
                 return null;
@@ -104,15 +128,15 @@ namespace Exam2013
 
         public double this[int index]
         {
-            get{    return values[index];}
-            set{    values[index] = value;}
+            get { return values[index]; }
+            set { values[index] = value; }
         }
         public override string ToString()
         {
             string[] tmp = new string[values.Length];
             for (int i = 0; i < values.Length; i++)
-                tmp[i] = string.Format("{0}",values[i]) ;
-            return string.Join(" ,",tmp);
+                tmp[i] = string.Format("{0}", values[i]);
+            return string.Join(" ,", tmp);
         }
     }
 
@@ -131,7 +155,7 @@ namespace Exam2013
 
         public FunctionVector(int size)
         {
-            if( size>0 || size != 2 )
+            if (size > 0 || size != 2)
             {
                 functionVector = new Function[size];
                 for (int i = 0; i < functionVector.Length; i++)
@@ -148,7 +172,7 @@ namespace Exam2013
         public Vector Evaluate(Vector values)
         {
             double[] array = new double[functionVector.Length];
-            for(int i = 0; i < functionVector.Length; i++)
+            for (int i = 0; i < functionVector.Length; i++)
                 array[i] = functionVector[i](values);
             Vector tmp = new Vector(array);
             return tmp;
@@ -156,8 +180,8 @@ namespace Exam2013
 
         public Function this[int index]
         {
-            get{    return functionVector[index];}
-            set{    functionVector[index] = value;}
+            get { return functionVector[index]; }
+            set { functionVector[index] = value; }
         }
 
     }
@@ -168,6 +192,11 @@ namespace Exam2013
         private double delta = 0.5, r = 2, b = 0.6, d = 0.5;
         private int nsettle = 200;
         private int nreps = 200;
+        public double Delta { get; set; }
+        public double R { get; set; }
+        public double B { get; set; }
+        public double D { get; set; }
+        public double Nsettle { get; set; }
 
         public PredPrey()
         {
@@ -181,8 +210,8 @@ namespace Exam2013
             double[] deltalist = new double[numsteps];
             double h = (deltafrom - deltato) / numsteps;
             PredPrey p = new PredPrey();
-            FileStream f = new FileStream(filename, FileMode.OpenOrCreate, FileAccess.ReadWrite);
-            StreamWriter streamWriter = new StreamWriter(filename);
+            //FileStream f = new FileStream(filename, FileMode.OpenOrCreate, FileAccess.ReadWrite);
+            //StreamWriter streamWriter = new StreamWriter(filename);
             Vector v = new Vector();
             Vector vloop = new Vector();
             v = v0;
@@ -190,26 +219,32 @@ namespace Exam2013
             {
                 deltalist[i] = deltafrom + (i + 1) * h;
                 Vector deltav = new Vector(deltalist);
-                for(int s = 0; s < nreps;s++)
+                for (int s = 0; s < nreps; s++)
                 {
-                    for(int t = 0; t < nsettle; t++)
+                    for (int t = 0; t < nsettle; t++)
                     {
+                        StreamWriter streamWriter = new StreamWriter(filename);
                         streamWriter.Write(deltalist[i]);
                         streamWriter.Write(" , ");
                         vloop = fv.Evaluate(v);
                         v = v + vloop;
+                        streamWriter.Close();
                         p.run1sim(v, filename);
+                        
                     }
                 }
             }
+
+            
         }
 
-        public void run1sim(Vector v0,string filename)
+        public void run1sim(Vector v0, string filename)
         {
-            FileStream f = new FileStream(filename, FileMode.OpenOrCreate, FileAccess.ReadWrite);
+           // FileStream f = new FileStream(filename, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
             StreamWriter streamWriter = new StreamWriter(filename);
             streamWriter.Write(v0);
             streamWriter.WriteLine();
+            streamWriter.Close();
         }
 
 
