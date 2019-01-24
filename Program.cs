@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 
 namespace Exam2013
 {
@@ -10,11 +11,14 @@ namespace Exam2013
         {
             FunctionVector fv = new FunctionVector(3);
             fv[0] = x => x[0] + x[1] + x[2];
-            fv[1] = x => x[0] + x[1] + x[2];
-            fv[2] = x => x[0] + x[1] + x[2];
+            fv[1] = x => x[0] + x[1] * x[2];
+            fv[2] = x => x[0] * x[1] + x[2];
             Vector tmp = fv.Evaluate(new Vector(new double[] { 1, -1, 3 }));
             Console.WriteLine("tmp = {0}", tmp);
-            Console.ReadKey();
+
+            double d = fv[0].Invoke(tmp);
+            Console.WriteLine(d);
+
         }
     }
 
@@ -100,27 +104,22 @@ namespace Exam2013
 
         public double this[int index]
         {
-            get
-            {
-               return values[index];
-            }
-            set
-            {
-                values[index] = value;
-            }
+            get{    return values[index];}
+            set{    values[index] = value;}
         }
         public override string ToString()
         {
-            return string.Format("{0}",values);
+            string[] tmp = new string[values.Length];
+            for (int i = 0; i < values.Length; i++)
+                tmp[i] = string.Format("{0}",values[i]) ;
+            return string.Join(" ,",tmp);
         }
     }
 
     public delegate double Function(Vector vector);
 
-    class FunctionVector
+    public class FunctionVector
     {
-
-
         private Function[] functionVector;
 
         public FunctionVector()
@@ -148,21 +147,17 @@ namespace Exam2013
 
         public Vector Evaluate(Vector values)
         {
-            Vector tmp = new Vector();
-            tmp = values;
+            double[] array = new double[functionVector.Length];
+            for(int i = 0; i < functionVector.Length; i++)
+                array[i] = functionVector[i](values);
+            Vector tmp = new Vector(array);
             return tmp;
         }
 
         public Function this[int index]
         {
-            get
-            {
-                return functionVector[index];
-            }
-            set
-            {
-                functionVector[index] = value;
-            }
+            get{    return functionVector[index];}
+            set{    functionVector[index] = value;}
         }
 
     }
@@ -176,19 +171,48 @@ namespace Exam2013
 
         public PredPrey()
         {
+            Function x = (v) => { return r * v[0] * (1 - v[0] - b * v[0] * v[1]); };
+            Function y = (v) => { return -d + b * v[0] * v[1]; };
+            fv = new FunctionVector(new Function[] { x, y });
+        }
 
+        public void runsimDrange(Vector v0, double deltafrom, double deltato, int numsteps, string filename)
+        {
+            double[] deltalist = new double[numsteps];
+            double h = (deltafrom - deltato) / numsteps;
+            PredPrey p = new PredPrey();
+            FileStream f = new FileStream(filename, FileMode.OpenOrCreate, FileAccess.ReadWrite);
+            StreamWriter streamWriter = new StreamWriter(filename);
+            Vector v = new Vector();
+            Vector vloop = new Vector();
+            v = v0;
+            for (int i = 0; i < numsteps; i++)
+            {
+                deltalist[i] = deltafrom + (i + 1) * h;
+                Vector deltav = new Vector(deltalist);
+                for(int s = 0; s < nreps;s++)
+                {
+                    for(int t = 0; t < nsettle; t++)
+                    {
+                        streamWriter.Write(deltalist[i]);
+                        streamWriter.Write(" , ");
+                        vloop = fv.Evaluate(v);
+                        v = v + vloop;
+                        p.run1sim(v, filename);
+                    }
+                }
+            }
+        }
+
+        public void run1sim(Vector v0,string filename)
+        {
+            FileStream f = new FileStream(filename, FileMode.OpenOrCreate, FileAccess.ReadWrite);
+            StreamWriter streamWriter = new StreamWriter(filename);
+            streamWriter.Write(v0);
+            streamWriter.WriteLine();
         }
 
 
-
     }
-
-
-
-
-
-
-
-
 
 }
